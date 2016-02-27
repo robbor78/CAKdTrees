@@ -1,3 +1,4 @@
+import java.util.Iterator;
 import java.util.Vector;
 
 import edu.princeton.cs.algs4.Point2D;
@@ -90,10 +91,51 @@ public class KdTree {
 
     // unit testing of the methods (optional)
     public static void main(String[] args) {
+        System.out.println("Running tests...");
         testContains();
+        testRangeSearch();
+    }
+
+    private static void testRangeSearch() {
+        System.out.println("testRangeSearch");
+        KdTree tree = new KdTree();
+
+        Iterable<Point2D> iter = tree.range(new RectHV(0d, 0d, 1d, 1d));
+        assert !iter.iterator().hasNext();
+
+        tree.insert(new Point2D(0.5d, 0.5d));
+        iter = tree.range(new RectHV(0d, 0d, 1d, 1d));
+        assert iter.iterator().hasNext();
+
+        tree.insert(new Point2D(0.25d, 0.5d));
+        tree.insert(new Point2D(0.75d, 0.5d));
+
+        iter = tree.range(new RectHV(0d, 0d, 1d, 1d));
+        int count = 0;
+        Iterator<Point2D> i = iter.iterator();
+        while (i.hasNext()) {
+            count++;
+            i.next();
+        }
+        assert count == 3;
+        
+        iter = tree.range(new RectHV(0d, 0.1d, 0.2d, 0.9d));
+        assert !iter.iterator().hasNext();
+
+        iter = tree.range(new RectHV(0.6d, 0.4d, 0.78d, 0.6d));
+        count = 0;
+        i = iter.iterator();
+        while (i.hasNext()) {
+            count++;
+            i.next();
+        }
+        assert count == 1;
+
+
     }
 
     private static void testContains() {
+        System.out.println("testContains");
         KdTree tree = new KdTree();
 
         tree.insert(new Point2D(0.5d, 0.5d));
@@ -120,7 +162,7 @@ public class KdTree {
         if (parent == null) {
             return;
         }
-        
+
         RectHV queryRect = query.get();
         if (queryRect.intersects(parent.rect)) {
             if (queryRect.contains(parent.p)) {
