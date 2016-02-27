@@ -78,10 +78,23 @@ public class KdTree {
         KdTree tree = new KdTree();
 
         tree.insert(new Point2D(0.5d, 0.5d));
-        
         boolean isContains = tree.contains(new Point2D(0.5d, 0.5d));
-        
         assert isContains;
+
+        tree.insert(new Point2D(0.25d, 0.5d));
+        isContains = tree.contains(new Point2D(0.25d, 0.5d));
+        assert isContains;
+
+        tree.insert(new Point2D(0.75d, 0.5d));
+        isContains = tree.contains(new Point2D(0.75d, 0.5d));
+        assert isContains;
+
+        isContains = tree.contains(new Point2D(0.0d, 0.0d));
+        assert !isContains;
+
+        isContains = tree.contains(new Point2D(0.3d, 0.3d));
+        assert !isContains;
+
     }
 
     private void draw(Node x, boolean isVertDiv) {
@@ -108,9 +121,9 @@ public class KdTree {
 
     }
 
-    private Node insert(Node x, Point2D point, boolean isVertDiv) {
+    private Node insert(Node parent, Point2D point, boolean isVertDiv) {
 
-        if (x == null) {
+        if (parent == null) {
             Node root = new Node();
             root.p = point;
             root.rect = new RectHV(0d, 0d, 1d, 1d);
@@ -121,39 +134,58 @@ public class KdTree {
         }
 
         double cmp1 = point.x();
-        double cmp2 = x.p.x();
+        double cmp2 = parent.p.x();
         if (!isVertDiv) {
             cmp1 = point.y();
-            cmp2 = x.p.y();
+            cmp2 = parent.p.y();
         }
 
         if (cmp1 < cmp2) {
-            boolean isLBNull = x.lb == null;
-            x.lb = insert(x.lb, point, !isVertDiv);
+            // left or bottom
+            boolean isLBNull = parent.lb == null;
+            parent.lb = insert(parent.lb, point, !isVertDiv);
             if (isLBNull) {
                 if (isVertDiv) {
-                    x.lb.rect = new RectHV(x.rect.xmin(), x.rect.ymax(),
-                            x.p.x(), x.rect.ymin());
+                    // parent is vertical division
+                    // on the left of the vertical division
+                    parent.lb.rect = new RectHV(parent.rect.xmin(),
+                            parent.rect.ymin(), parent.p.x(),
+                            parent.rect.ymax());
                 } else {
-                    x.lb.rect = new RectHV(x.rect.xmin(), x.lb.p.y(), x.p.x(),
-                            x.rect.ymin());
+                    // parent is horizontal division
+                    // on the bottom of the horizontal division
+                    parent.lb.rect = new RectHV(parent.rect.xmin(),
+                            parent.rect.ymin(), parent.rect.xmax(),
+                            parent.p.y());
                 }
             }
         } else if (cmp1 > cmp2) {
-            boolean isRTNull = x.lb == null;
-            x.rt = insert(x.rt, point, !isVertDiv);
+            boolean isRTNull = parent.lb == null;
+            parent.rt = insert(parent.rt, point, !isVertDiv);
+            /*
+             * if (isRTNull) { if (isVertDiv) { x.rt.rect = new RectHV(x.p.x(),
+             * x.rect.ymax(), x.rect.xmax(), x.rect.ymin()); } else { x.rt.rect
+             * = new RectHV(x.rect.xmin(), x.rect.ymax(), x.p.x(), x.rt.p.y());
+             * } }
+             */
             if (isRTNull) {
                 if (isVertDiv) {
-                    x.rt.rect = new RectHV(x.p.x(), x.rect.ymax(),
-                            x.rect.xmax(), x.rect.ymin());
+                    // parent is vertical division
+                    // on the right of the vertical division
+                    parent.rt.rect = new RectHV(parent.p.x(),
+                            parent.rect.ymin(), parent.rect.xmax(),
+                            parent.rect.ymax());
                 } else {
-                    x.rt.rect = new RectHV(x.rect.xmin(), x.rect.ymax(),
-                            x.p.x(), x.rt.p.y());
+                    // parent is horizontal division
+                    // on the top of the horizontal division
+                    parent.rt.rect = new RectHV(parent.rect.xmin(),
+                            parent.p.y(), parent.rect.xmax(),
+                            parent.rect.ymax());
                 }
             }
         }
 
-        return x;
+        return parent;
     }
 
     private boolean contains(Node x, Point2D point, boolean isVertDiv) {
