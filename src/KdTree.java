@@ -10,7 +10,7 @@ public class KdTree {
     private Node root;
     private int size;
     private ThreadLocal<Vector<Point2D>> rangePoints;
-    private ThreadLocal<RectHV> query;
+    private ThreadLocal<RectHV> queryRect;
 
     // construct an empty set of points
     public KdTree() {
@@ -68,7 +68,7 @@ public class KdTree {
             }
         };
 
-        query = new ThreadLocal<RectHV>() {
+        queryRect = new ThreadLocal<RectHV>() {
             @Override
             protected RectHV initialValue() {
                 return rect;
@@ -80,13 +80,43 @@ public class KdTree {
         return rangePoints.get();
     }
 
+    private ThreadLocal<Point2D> closestSoFar;
+    private ThreadLocal<Point2D> queryPoint;
+    private ThreadLocal<Double> distanceBest;
+
     // a nearest neighbor in the set to point p; null if the set is empty
     public Point2D nearest(Point2D p) {
         if (p == null) {
             throw new java.lang.NullPointerException();
         }
 
-        return new Point2D(0, 0);
+        if (root == null) {
+            return null;
+        }
+        closestSoFar = new ThreadLocal<Point2D>() {
+            @Override
+            protected Point2D initialValue() {
+                return root.p;
+            }
+        };
+
+        queryPoint = new ThreadLocal<Point2D>() {
+            @Override
+            protected Point2D initialValue() {
+                return p;
+            }
+        };
+
+        distanceBest = new ThreadLocal<Double>() {
+            @Override
+            protected Double initialValue() {
+                return Double.MAX_VALUE;
+            }
+        };
+
+        nearest(root, true);
+
+        return closestSoFar.get();
     }
 
     // unit testing of the methods (optional)
@@ -118,7 +148,7 @@ public class KdTree {
             i.next();
         }
         assert count == 3;
-        
+
         iter = tree.range(new RectHV(0d, 0.1d, 0.2d, 0.9d));
         assert !iter.iterator().hasNext();
 
@@ -130,7 +160,6 @@ public class KdTree {
             i.next();
         }
         assert count == 1;
-
 
     }
 
@@ -155,6 +184,58 @@ public class KdTree {
 
         isContains = tree.contains(new Point2D(0.3d, 0.3d));
         assert !isContains;
+    }
+
+    private void nearest(Node parent, boolean isVertDiv) {
+        if (parent == null) {
+            return;
+        }
+
+        Point2D query = queryPoint.get();
+        double distBest = distanceBest.get();
+
+        // if the closest point discovered so far
+        // is closer than the distance between
+        // the query point and the rectangle
+        // corresponding to a node,
+        // there is no need to explore that node
+        // (or its subtrees).
+        // the closest point found while exploring
+        // the previous subtree may enable pruning
+        // of the next subtree.
+        if (parent.rect.distanceSquaredTo(query) > distBest) {
+            return;
+        }
+
+        double distNow = query.distanceSquaredTo(parent.p);
+
+        if (distNow < distBest) {
+            distanceBest.set(distNow);
+            closestSoFar.set(parent.p);
+        }
+
+        // first, go towards query point
+        // choose the subtree that is on
+        // the same side of the splitting line
+        // as the query point as the first subtree to explore
+        Node first = parent.lb;
+        Node second = parent.rt;
+        if (isVertDiv) {
+            if (query.x() > parent.p.x()) {
+                //query point on right on vertical division => go right first
+                first = parent.rt;
+                second = parent.lb;
+            }
+        } else {
+            if (query.y() > parent.p.y()) {
+                //query point on top of horizontal division => go top first
+                first = parent.rt;
+                second = parent.lb;
+            }
+        }
+
+        nearest(first, !isVertDiv);
+        nearest(second, !isVertDiv);
 
     }
 
@@ -163,9 +244,9 @@ public class KdTree {
             return;
         }
 
-        RectHV queryRect = query.get();
-        if (queryRect.intersects(parent.rect)) {
-            if (queryRect.contains(parent.p)) {
+        RectHV query = queryRect.get();
+        if (query.intersects(parent.rect)) {
+            if (query.contains(parent.p)) {
                 rangePoints.get().add(parent.p);
             }
             range(parent.lb, !isVertDiv);
