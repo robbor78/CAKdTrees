@@ -158,16 +158,12 @@ public class KdTree {
                             parent.rect.ymin(), parent.rect.xmax(),
                             parent.p.y());
                 }
+                //System.out.println(parent.lb.rect);
             }
         } else if (cmp1 > cmp2) {
-            boolean isRTNull = parent.lb == null;
+            boolean isRTNull = parent.rt == null;
             parent.rt = insert(parent.rt, point, !isVertDiv);
-            /*
-             * if (isRTNull) { if (isVertDiv) { x.rt.rect = new RectHV(x.p.x(),
-             * x.rect.ymax(), x.rect.xmax(), x.rect.ymin()); } else { x.rt.rect
-             * = new RectHV(x.rect.xmin(), x.rect.ymax(), x.p.x(), x.rt.p.y());
-             * } }
-             */
+
             if (isRTNull) {
                 if (isVertDiv) {
                     // parent is vertical division
@@ -182,6 +178,7 @@ public class KdTree {
                             parent.p.y(), parent.rect.xmax(),
                             parent.rect.ymax());
                 }
+                //System.out.println(parent.rt.rect);
             }
         }
 
