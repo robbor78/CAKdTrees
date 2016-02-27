@@ -11,7 +11,10 @@ public class KdTree {
     private int size;
     private ThreadLocal<Vector<Point2D>> rangePoints;
     private ThreadLocal<RectHV> queryRect;
-
+    private ThreadLocal<Point2D> closestSoFar;
+    private ThreadLocal<Point2D> queryPoint;
+    private ThreadLocal<Double> distanceBest;
+    
     // construct an empty set of points
     public KdTree() {
         root = null;
@@ -79,10 +82,6 @@ public class KdTree {
 
         return rangePoints.get();
     }
-
-    private ThreadLocal<Point2D> closestSoFar;
-    private ThreadLocal<Point2D> queryPoint;
-    private ThreadLocal<Double> distanceBest;
 
     // a nearest neighbor in the set to point p; null if the set is empty
     public Point2D nearest(Point2D p) {
@@ -282,13 +281,13 @@ public class KdTree {
     private Node insert(Node parent, Point2D point, boolean isVertDiv) {
 
         if (parent == null) {
-            Node root = new Node();
-            root.p = point;
-            root.rect = new RectHV(0d, 0d, 1d, 1d);
-            root.lb = null;
-            root.rt = null;
+            Node newNode = new Node();
+            newNode.p = point;
+            newNode.rect = new RectHV(0d, 0d, 1d, 1d);
+            newNode.lb = null;
+            newNode.rt = null;
             size++;
-            return root;
+            return newNode;
         }
 
         double cmp1 = point.x();
