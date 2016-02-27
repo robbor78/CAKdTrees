@@ -1,6 +1,7 @@
 import java.util.TreeSet;
 import java.util.Vector;
 
+import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
@@ -86,6 +87,30 @@ public class PointSET {
 
     // unit testing of the methods (optional)
     public static void main(String[] args) {
+        System.out.println("Running tests...");
+        testCircle();
+    }
 
+    private static void testCircle() {
+        System.out.println("testCircle");
+
+        PointSET set = loadFile("/run/media/bert/280AC22E0AF59495/coursera/algorithms/1/assignments/5/doc/kdtree/circle10.txt");
+
+        Point2D actual = set.nearest(new Point2D(0.81d, 0.30d));
+
+        System.out.println(actual);
+    }
+
+    private static PointSET loadFile(String filename) {
+        PointSET set = new PointSET();
+        In in = new In(filename);
+
+        while (!in.isEmpty()) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+            Point2D p = new Point2D(x, y);
+            set.insert(p);
+        }
+        return set;
     }
 }

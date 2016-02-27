@@ -1,6 +1,9 @@
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Vector;
 
+import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
@@ -14,7 +17,7 @@ public class KdTree {
     private ThreadLocal<Point2D> closestSoFar;
     private ThreadLocal<Point2D> queryPoint;
     private ThreadLocal<Double> distanceBest;
-    
+
     // construct an empty set of points
     public KdTree() {
         root = null;
@@ -123,6 +126,83 @@ public class KdTree {
         System.out.println("Running tests...");
         testContains();
         testRangeSearch();
+        testSize1();
+        testSize2();
+        testCircle();
+    }
+
+    private static void testCircle() {
+        System.out.println("testCircle");
+
+        KdTree kdtree = loadFile("/run/media/bert/280AC22E0AF59495/coursera/algorithms/1/assignments/5/doc/kdtree/circle10.txt");
+
+        Point2D actual = kdtree.nearest(new Point2D(0.81d, 0.30d));
+        Point2D expected = new Point2D(0.975528d, 0.345492d);
+
+        assert expected.equals(actual);
+
+        // System.out.println(actual);
+    }
+
+    private static void testSize2() {
+        System.out.println("testSize2");
+        int numPoints = 100000;
+        int dim = 100000;
+
+        Random rnd = new Random();
+        HashSet<Point2D> set = new HashSet<Point2D>();
+
+        KdTree tree = new KdTree();
+
+        for (int i = 0; i < numPoints; i++) {
+            boolean isUnique = false;
+
+            while (!isUnique) {
+                int gridX = Math.abs(rnd.nextInt()) % dim;
+                int gridY = Math.abs(rnd.nextInt()) % dim;
+                System.out.println(gridX + " " + gridY);
+                double x = (double) gridX / (double) dim;// rnd.nextDouble();
+                double y = (double) gridY / (double) dim; // rnd.nextDouble();
+
+                Point2D p = new Point2D(x, y);
+
+                isUnique = !set.contains(p);
+
+                if (isUnique) {
+                    System.out.println(p+" "+(i+1)+" "+tree.contains(p));
+                    set.add(p);
+                    tree.insert(p);
+                    System.out.println("size= "+tree.size());
+                    if (tree.size() != i+1) {
+                        tree.contains(p);
+                        tree.insert(p);
+                    }
+                    assert tree.size() == (i + 1);
+                }
+            }
+        }
+
+        assert tree.size() == numPoints;
+    }
+
+    private static void testSize1() {
+        System.out.println("testSize1");
+        KdTree tree = new KdTree();
+
+        int size;
+
+        size = tree.size();
+        assert size == 0;
+
+        tree.insert(new Point2D(0.5d, 0.5d));
+        size = tree.size();
+        assert size == 1;
+
+        tree.insert(new Point2D(0.25d, 0.5d));
+        tree.insert(new Point2D(0.75d, 0.5d));
+        size = tree.size();
+        assert size == 3;
+
     }
 
     private static void testRangeSearch() {
@@ -185,6 +265,19 @@ public class KdTree {
         assert !isContains;
     }
 
+    private static KdTree loadFile(String filename) {
+        KdTree kdtree = new KdTree();
+        In in = new In(filename);
+
+        while (!in.isEmpty()) {
+            double x = in.readDouble();
+            double y = in.readDouble();
+            Point2D p = new Point2D(x, y);
+            kdtree.insert(p);
+        }
+        return kdtree;
+    }
+
     private void nearest(Node parent, boolean isVertDiv) {
         if (parent == null) {
             return;
@@ -221,13 +314,13 @@ public class KdTree {
         Node second = parent.rt;
         if (isVertDiv) {
             if (query.x() > parent.p.x()) {
-                //query point on right on vertical division => go right first
+                // query point on right on vertical division => go right first
                 first = parent.rt;
                 second = parent.lb;
             }
         } else {
             if (query.y() > parent.p.y()) {
-                //query point on top of horizontal division => go top first
+                // query point on top of horizontal division => go top first
                 first = parent.rt;
                 second = parent.lb;
             }
@@ -317,7 +410,7 @@ public class KdTree {
                 }
                 // System.out.println(parent.lb.rect);
             }
-        } else if (cmp1 > cmp2) {
+        } else if (cmp1 >= cmp2) {
             boolean isRTNull = parent.rt == null;
             parent.rt = insert(parent.rt, point, !isVertDiv);
 

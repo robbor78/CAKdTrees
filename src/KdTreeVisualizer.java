@@ -8,6 +8,7 @@
  *
  ******************************************************************************/
 
+import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
@@ -16,9 +17,26 @@ import edu.princeton.cs.algs4.StdOut;
 public class KdTreeVisualizer {
 
     public static void main(String[] args) {
+       
+        
         RectHV rect = new RectHV(0.0, 0.0, 1.0, 1.0);
         StdDraw.show(0);
         KdTree kdtree = new KdTree();
+        
+        if (args.length==1) {
+            String filename = args[0];
+            In in = new In(filename);
+            
+            while (!in.isEmpty()) {
+                double x = in.readDouble();
+                double y = in.readDouble();
+                Point2D p = new Point2D(x, y);
+                kdtree.insert(p);
+                StdDraw.clear();
+                kdtree.draw();
+            }
+        }
+        
         while (true) {
             if (StdDraw.mousePressed()) {
                 double x = StdDraw.mouseX();
