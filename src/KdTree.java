@@ -7,11 +7,14 @@ import edu.princeton.cs.algs4.StdDraw;
 public class KdTree {
 
     private Node root;
-    private int size = 0;
+    private int size;
+    private ThreadLocal<Vector<Point2D>> rangePoints;
+    private ThreadLocal<RectHV> query;
 
     // construct an empty set of points
     public KdTree() {
         root = null;
+        size = 0;
     }
 
     // is the set empty?
@@ -57,7 +60,23 @@ public class KdTree {
             throw new java.lang.NullPointerException();
         }
 
-        return new Vector<Point2D>();
+        rangePoints = new ThreadLocal<Vector<Point2D>>() {
+            @Override
+            protected Vector<Point2D> initialValue() {
+                return new Vector<Point2D>();
+            }
+        };
+
+        query = new ThreadLocal<RectHV>() {
+            @Override
+            protected RectHV initialValue() {
+                return rect;
+            }
+        };
+
+        range(root, true);
+
+        return rangePoints.get();
     }
 
     // a nearest neighbor in the set to point p; null if the set is empty
@@ -94,6 +113,22 @@ public class KdTree {
 
         isContains = tree.contains(new Point2D(0.3d, 0.3d));
         assert !isContains;
+
+    }
+
+    private void range(Node parent, boolean isVertDiv) {
+        if (parent == null) {
+            return;
+        }
+        
+        RectHV queryRect = query.get();
+        if (queryRect.intersects(parent.rect)) {
+            if (queryRect.contains(parent.p)) {
+                rangePoints.get().add(parent.p);
+            }
+            range(parent.lb, !isVertDiv);
+            range(parent.rt, !isVertDiv);
+        }
 
     }
 
@@ -158,7 +193,7 @@ public class KdTree {
                             parent.rect.ymin(), parent.rect.xmax(),
                             parent.p.y());
                 }
-                //System.out.println(parent.lb.rect);
+                // System.out.println(parent.lb.rect);
             }
         } else if (cmp1 > cmp2) {
             boolean isRTNull = parent.rt == null;
@@ -178,7 +213,7 @@ public class KdTree {
                             parent.p.y(), parent.rect.xmax(),
                             parent.rect.ymax());
                 }
-                //System.out.println(parent.rt.rect);
+                // System.out.println(parent.rt.rect);
             }
         }
 
