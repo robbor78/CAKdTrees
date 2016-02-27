@@ -129,12 +129,31 @@ public class KdTree {
         testSize1();
         testSize2();
         testCircle();
+        testDuplicate();
+    }
+
+    private static void testDuplicate() {
+        System.out.println("testDuplicate");
+
+        KdTree tree = new KdTree();
+
+        double x = 0.65743d;
+        double y = 0.95637d;
+
+        tree.insert(new Point2D(x, y));
+        tree.insert(new Point2D(x, y));
+        int size = tree.size();
+        assert size == 1;
+
+        boolean isContains = tree.contains(new Point2D(x, y));
+        assert isContains;
     }
 
     private static void testCircle() {
         System.out.println("testCircle");
 
-        KdTree kdtree = loadFile("/run/media/bert/280AC22E0AF59495/coursera/algorithms/1/assignments/5/doc/kdtree/circle10.txt");
+        String path = "/run/media/bert/280AC22E0AF59495/coursera/algorithms/1/assignments/5/doc/kdtree/circle10.txt";
+        KdTree kdtree = loadFile(path);
 
         Point2D actual = kdtree.nearest(new Point2D(0.81d, 0.30d));
         Point2D expected = new Point2D(0.975528d, 0.345492d);
@@ -158,25 +177,25 @@ public class KdTree {
             boolean isUnique = false;
 
             while (!isUnique) {
-                int gridX = Math.abs(rnd.nextInt()) % dim;
-                int gridY = Math.abs(rnd.nextInt()) % dim;
-                System.out.println(gridX + " " + gridY);
-                double x = (double) gridX / (double) dim;// rnd.nextDouble();
-                double y = (double) gridY / (double) dim; // rnd.nextDouble();
+                int gridX = rnd.nextInt(Integer.MAX_VALUE) % dim;
+                int gridY = rnd.nextInt(Integer.MAX_VALUE) % dim;
+                // System.out.println(gridX + " " + gridY);
+                double x = (double) gridX / (double) dim;
+                double y = (double) gridY / (double) dim;
 
                 Point2D p = new Point2D(x, y);
 
                 isUnique = !set.contains(p);
 
                 if (isUnique) {
-                    System.out.println(p+" "+(i+1)+" "+tree.contains(p));
+                    // System.out.println(p+" "+(i+1)+" "+tree.contains(p));
                     set.add(p);
                     tree.insert(p);
-                    System.out.println("size= "+tree.size());
-                    if (tree.size() != i+1) {
-                        tree.contains(p);
-                        tree.insert(p);
-                    }
+                    // System.out.println("size= "+tree.size());
+                    // if (tree.size() != i+1) {
+                    // tree.contains(p);
+                    // tree.insert(p);
+                    // }
                     assert tree.size() == (i + 1);
                 }
             }
@@ -381,6 +400,10 @@ public class KdTree {
             newNode.rt = null;
             size++;
             return newNode;
+        }
+
+        if (parent.p.equals(point)) {
+            return parent;
         }
 
         double cmp1 = point.x();
